@@ -231,12 +231,12 @@ function run_klipper_setup() {
      if [[ -n "$matched_repos" ]]; then
        local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
        local repo_name=$(basename "${latest_matched_repo}" .zip)
-       local klipper_dir_name=$(basename "${KLIPPER_DIR}")
        status_msg "Unzipping Klipper from ${latest_matched_repo}"
        unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
        mv ${OFFLINE_DIR}/${repo_name} ${KLIPPER_DIR}
        rm -fr ${OFFLINE_DIR}/${repo_name}
        extracted_from_offline="true"
+       ok_msg "Extracting complete!"
      else
        status_msg "No offline package available!"
      fi

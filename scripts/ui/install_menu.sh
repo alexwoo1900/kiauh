@@ -31,6 +31,7 @@ function install_ui() {
   echo -e "| Touchscreen GUI:         |                            |"
   echo -e "|  5) [KlipperScreen]      | Webcam Streamer:           |"
   echo -e "|                          | 12) [Crowsnest]            |"
+  echo -e "|                          | 13) [MJPG-Streamer]        |"
   back_footer
 }
 
@@ -73,6 +74,8 @@ function install_menu() {
         do_action "install_mobileraker" "install_ui";;
       12)
         do_action "install_crowsnest" "install_ui";;
+      13)
+	do_action "install_mjpg-streamer" "install_ui";;
       B|b)
         clear; main_menu; break;;
       *)

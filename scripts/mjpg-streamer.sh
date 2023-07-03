@@ -38,17 +38,38 @@ function install_mjpg-streamer() {
   fi
 
   dependency_check "${dep[@]}"
-
-  ### step 1: clone mjpg-streamer
-  status_msg "Cloning MJPG-Streamer from ${repo} ..."
+  
+  ### step 1: get mjpg-streamer
   [[ -d "${HOME}/mjpg-streamer" ]] && rm -rf "${HOME}/mjpg-streamer"
 
-  cd "${HOME}" || exit 1
-  if ! git clone "${repo}" "${HOME}/mjpg-streamer"; then
-    print_error "Cloning MJPG-Streamer from\n ${repo}\n failed!"
-    exit 1
+  ### 1-1 extract from local
+  local extracted_from_offline="false"
+  if [[ -d "${OFFLINE_DIR}" ]]; then
+     matched_repos=$(find "${OFFLINE_DIR}" -type f -name "mjpg-streamer-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
+     if [[ -n "$matched_repos" ]]; then
+       local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
+       local repo_name=$(basename "${latest_matched_repo}" .zip)
+       status_msg "Unzipping MJPG-Streamer from ${latest_matched_repo}"
+       unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
+       mv ${OFFLINE_DIR}/${repo_name} ${HOME}/mjpg-streamer
+       rm -fr ${OFFLINE_DIR}/${repo_name}
+       extracted_from_offline="true"
+       ok_msg "Extracting complete!"
+     else
+       status_msg "No offline package available!"
+     fi
   fi
-  ok_msg "Cloning complete!"
+
+  ### 1-2 clone from remote
+  if [[ ${extracted_from_offline} == "false" ]]; then
+    status_msg "Cloning MJPG-Streamer from ${repo} ..."
+    cd "${HOME}" || exit 1
+    if ! git clone "${repo}" "${HOME}/mjpg-streamer"; then
+      print_error "Cloning MJPG-Streamer from\n ${repo}\n failed!"
+      exit 1
+    fi
+    ok_msg "Cloning complete!"
+  fi
 
   ### step 2: compiling mjpg-streamer
   status_msg "Compiling MJPG-Streamer ..."
@@ -78,15 +99,15 @@ function install_mjpg-streamer() {
 EOT
 
   sudo cp "${webcamd}" "/usr/local/bin/webcamd"
-  sudo sed -i "/^config_dir=/ s|=.*|=${KLIPPER_CONFIG}|" /usr/local/bin/webcamd
+  sudo sed -i "/^config_dir=/ s|=.*|=${CONFIG_DIR}|" /usr/local/bin/webcamd
   sudo sed -i "/MJPGSTREAMER_HOME/ s/pi/${USER}/" /usr/local/bin/webcamd
   sudo chmod +x /usr/local/bin/webcamd
 
   ### step 4: create webcam.txt config file
-  [[ ! -d ${KLIPPER_CONFIG} ]] && mkdir -p "${KLIPPER_CONFIG}"
-  if [[ ! -f "${KLIPPER_CONFIG}/webcam.txt" ]]; then
+  [[ ! -d ${CONFIG_DIR} ]] && mkdir -p "${CONFIG_DIR}"
+  if [[ ! -f "${CONFIG_DIR}/webcam.txt" ]]; then
     status_msg "Creating webcam.txt config file ..."
-    cp "${webcam_txt}" "${KLIPPER_CONFIG}/webcam.txt"
+    cp "${webcam_txt}" "${CONFIG_DIR}/webcam.txt"
     ok_msg "Done!"
   fi
 
@@ -106,9 +127,9 @@ EOT
   fi
 
   ### step 6.1: create webcamd.log symlink
-  [[ ! -d ${KLIPPER_LOGS} ]] && mkdir -p "${KLIPPER_LOGS}"
-  if [[ -f "/var/log/webcamd.log" && ! -L "${KLIPPER_LOGS}/webcamd.log" ]]; then
-    ln -s "/var/log/webcamd.log" "${KLIPPER_LOGS}/webcamd.log"
+  [[ ! -d ${LOG_DIR} ]] && mkdir -p "${LOG_DIR}"
+  if [[ -f "/var/log/webcamd.log" && ! -L "${LOG_DIR}/webcamd.log" ]]; then
+    ln -s "/var/log/webcamd.log" "${LOG_DIR}/webcamd.log"
   fi
 
   ### step 6.2: add webcamd.log logrotate
@@ -187,7 +208,7 @@ function remove_mjpg-streamer() {
 
   ### remove webcamd log and symlink
   [[ -f "/var/log/webcamd.log" ]] && sudo rm -f "/var/log/webcamd.log"
-  [[ -L "${KLIPPER_LOGS}/webcamd.log" ]] && rm -f "${KLIPPER_LOGS}/webcamd.log"
+  [[ -L "${LOG_DIR}/webcamd.log" ]] && rm -f "${LOG_DIR}/webcamd.log"
 
   print_confirm "MJPG-Streamer successfully removed!"
 }

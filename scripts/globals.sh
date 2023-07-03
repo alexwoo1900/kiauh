@@ -30,6 +30,9 @@ function set_globals() {
   RESOURCES="${KIAUH_SRCDIR}/resources"
   BACKUP_DIR="${HOME}/kiauh-backups"
   OFFLINE_DIR="${HOME}/kiauh-offline"
+  CONFIG_DIR="${HOME}/printer_data/config"
+  LOG_DIR="${HOME}/printer_data/logs"
+
 
   #================== KLIPPER ===================#
   KLIPPY_ENV="${HOME}/klippy-env"
