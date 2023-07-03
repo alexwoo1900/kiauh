@@ -29,6 +29,7 @@ function set_globals() {
   LOGFILE="/tmp/kiauh.log"
   RESOURCES="${KIAUH_SRCDIR}/resources"
   BACKUP_DIR="${HOME}/kiauh-backups"
+  OFFLINE_DIR="${HOME}/kiauh-offline"
 
   #================== KLIPPER ===================#
   KLIPPY_ENV="${HOME}/klippy-env"

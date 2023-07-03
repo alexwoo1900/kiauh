@@ -219,8 +219,33 @@ function run_klipper_setup() {
   ### checking dependencies
   dependency_check "${dep[@]}"
 
-  ### step 1: clone klipper
-  clone_klipper "${custom_repo}" "${custom_branch}"
+  ### step 1: get klipper
+
+  ### force remove existing klipper dir and clone into fresh klipper dir
+  [[ -d ${KLIPPER_DIR} ]] && rm -rf "${KLIPPER_DIR}"
+
+  ### 1-1 extract from local
+  local extracted_from_offline="false"
+  if [[ -d "${OFFLINE_DIR}" ]]; then
+     matched_repos=$(find "${OFFLINE_DIR}" -type f -name "klipper-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
+     if [[ -n "$matched_repos" ]]; then
+       local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
+       local repo_name=$(basename "${latest_matched_repo}" .zip)
+       local klipper_dir_name=$(basename "${KLIPPER_DIR}")
+       status_msg "Unzipping Klipper from ${latest_matched_repo}"
+       unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
+       mv ${OFFLINE_DIR}/${repo_name} ${KLIPPER_DIR}
+       rm -fr ${OFFLINE_DIR}/${repo_name}
+       extracted_from_offline="true"
+     else
+       status_msg "No offline package available!"
+     fi
+  fi
+
+  ### 1-2 clone from remote
+  if [[ ${extracted_from_offline} == "false" ]]; then
+    clone_klipper "${custom_repo}" "${custom_branch}"
+  fi
 
   ### step 2: install klipper dependencies and create python virtualenv
   install_klipper_packages "${python_version}"
@@ -256,9 +281,6 @@ function clone_klipper() {
   repo="https://github.com/${repo}"
 
   [[ -z ${branch} ]] && branch="master"
-
-  ### force remove existing klipper dir and clone into fresh klipper dir
-  [[ -d ${KLIPPER_DIR} ]] && rm -rf "${KLIPPER_DIR}"
 
   status_msg "Cloning Klipper from ${repo} ..."
 
