@@ -20,8 +20,16 @@
 Users in KIAUH Enhanced can skip the mandatory update check of KIAUH to enter the main menu faster.  
 在KIAUH增强版中用户可以跳过KIAUH的强制性更新检查以更快地进入主菜单。
 
+### 📋 Custom source
+Support adding temporary package source or mirror.  
+支持添加临时性的下载源。
 
 ### 📋 Offline installation
 KIAUH Enhanced provides users with an entry point for local installation packages. This entry is represented as a custom folder that needs to be configured. Users only need to put specific software compressed packages in it and then proceed with the normal installation process.  
 KIAUH增强版给用户提供了一个本地安装包的入口。这个入口是一个自定义的文件夹。用户只需要把特定的软件压缩包放进去，然后进行正常的安装流程即可。
 
+Project | Offline | custom source
+-|-|-
+Klipper | Yes | Yes
+Octoprint | Not yet | Yes
+MJPG-Streamer | Yes | Not yet

@@ -19,29 +19,43 @@ function install_ui() {
   echo -e "|  all necessary dependencies for the various           |"
   echo -e "|  functions on a completely fresh system.              |"
   hr
-  echo -e "| Installation Mode:                                    |"
-  echo -e "|  0) [Offline directory]                               |"
-  printf "|     %-50s|\n" "(current: ${OFFLINE_DIR})"
+  echo -e "|                                                       |"
+  echo -e "| Installation:                                         |"
+  echo -e "|  0) [Offline]                                         |"
+  printf "|     %-50s|\n" "directory: ${OFFLINE_DIR}"
+  echo -e "|                                                       |"
   hr
+  echo -e "|                                                       |"
+  echo -e "| Mirror & Source:                                      |"
+  echo -e "|  1) [Github]                                          |"
+  echo -e "|  2) [pip]                                             |"
+  printf "|     %-50s|\n" "source: $([[ -z ${PIP_BASE_URL} ]] && printf "default" || printf ${PIP_BASE_URL})"
+  printf "|     %-50s|\n" "extra-source: $([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//") || printf "empty")"
+  echo -e "|                                                       |"
+  hr
+  echo -e "|                          |                            |"
   echo -e "| Firmware & API:          | 3rd Party Webinterface:    |"
-  echo -e "|  1) [Klipper]            |  6) [OctoPrint]            |"
-  echo -e "|  2) [Moonraker]          |                            |"
+  echo -e "|  3) [Klipper]            |  8) [OctoPrint]            |"
+  echo -e "|  4) [Moonraker]          |                            |"
   echo -e "|                          | Other:                     |"
-  echo -e "| Klipper Webinterface:    |  7) [PrettyGCode]          |"
-  echo -e "|  3) [Mainsail]           |  8) [Telegram Bot]         |"
-  echo -e "|  4) [Fluidd]             |  9) $(obico_install_title) |"
-  echo -e "|                          | 10) [OctoEverywhere]       |"
-  echo -e "|                          | 11) [Mobileraker]          |"
+  echo -e "| Klipper Webinterface:    |  9) [PrettyGCode]          |"
+  echo -e "|  5) [Mainsail]           | 10) [Telegram Bot]         |"
+  echo -e "|  6) [Fluidd]             | 11) $(obico_install_title) |"
+  echo -e "|                          | 12) [OctoEverywhere]       |"
+  echo -e "|                          | 13) [Mobileraker]          |"
   echo -e "| Touchscreen GUI:         |                            |"
-  echo -e "|  5) [KlipperScreen]      | Webcam Streamer:           |"
-  echo -e "|                          | 12) [Crowsnest]            |"
-  echo -e "|                          | 13) [MJPG-Streamer]        |"
+  echo -e "|  7) [KlipperScreen]      | Webcam Streamer:           |"
+  echo -e "|                          | 14) [Crowsnest]            |"
+  echo -e "|                          | 15) [MJPG-Streamer]        |"
+  echo -e "|                          |                            |"
   back_footer
 }
 
 function set_offline_dir() {
   read -p "Enter a new offline directory: " path
-  OFFLINE_DIR=${path}
+  if [[ -n $path ]]; then
+    OFFLINE_DIR=$path
+  fi
 }
 
 function install_menu() {
@@ -61,31 +75,33 @@ function install_menu() {
     case "${action}" in
       0)
 	do_action "set_offline_dir" "install_ui";;
-      1)
-        do_action "start_klipper_setup" "install_ui";;
       2)
-        do_action "moonraker_setup_dialog" "install_ui";;
+	do_action "set_pip_base" "install_ui";;
       3)
-        do_action "install_mainsail" "install_ui";;
+        do_action "start_klipper_setup" "install_ui";;
       4)
-        do_action "install_fluidd" "install_ui";;
+        do_action "moonraker_setup_dialog" "install_ui";;
       5)
-        do_action "install_klipperscreen" "install_ui";;
+        do_action "install_mainsail" "install_ui";;
       6)
-        do_action "octoprint_setup_dialog" "install_ui";;
+        do_action "install_fluidd" "install_ui";;
       7)
-        do_action "install_pgc_for_klipper" "install_ui";;
+        do_action "install_klipperscreen" "install_ui";;
       8)
-        do_action "telegram_bot_setup_dialog" "install_ui";;
+        do_action "octoprint_setup_dialog" "install_ui";;
       9)
-        do_action "moonraker_obico_setup_dialog" "install_ui";;
+        do_action "install_pgc_for_klipper" "install_ui";;
       10)
-        do_action "octoeverywhere_setup_dialog" "install_ui";;
+        do_action "telegram_bot_setup_dialog" "install_ui";;
       11)
-        do_action "install_mobileraker" "install_ui";;
+        do_action "moonraker_obico_setup_dialog" "install_ui";;
       12)
-        do_action "install_crowsnest" "install_ui";;
+        do_action "octoeverywhere_setup_dialog" "install_ui";;
       13)
+        do_action "install_mobileraker" "install_ui";;
+      14)
+        do_action "install_crowsnest" "install_ui";;
+      15)
 	do_action "install_mjpg-streamer" "install_ui";;
       B|b)
         clear; main_menu; break;;

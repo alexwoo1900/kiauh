@@ -163,8 +163,8 @@ function install_octoprint() {
     if virtualenv --python=python3 venv; then
       ### activate virtualenv
       source venv/bin/activate
-      pip install pip --upgrade
-      pip install --no-cache-dir octoprint
+      pip install pip --upgrade ${PIP_INSTALL_OPTIONS}
+      pip install --no-cache-dir octoprint ${PIP_INSTALL_OPTIONS}
       ### leave virtualenv
       deactivate
     else

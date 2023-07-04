@@ -302,8 +302,8 @@ function create_klipper_virtualenv() {
   status_msg "Installing $("python${python_version}" -V) virtual environment..."
 
   if virtualenv -p "python${python_version}" "${KLIPPY_ENV}"; then
-    (( python_version == 3 )) && "${KLIPPY_ENV}"/bin/pip install -U pip
-    "${KLIPPY_ENV}"/bin/pip install -r "${KLIPPER_DIR}"/scripts/klippy-requirements.txt
+    (( python_version == 3 )) && "${KLIPPY_ENV}"/bin/pip install -U pip ${PIP_INSTALL_OPTIONS}
+    "${KLIPPY_ENV}"/bin/pip install -r "${KLIPPER_DIR}"/scripts/klippy-requirements.txt ${PIP_INSTALL_OPTIONS}
   else
     log_error "failure while creating python3 klippy-env"
     error_msg "Creation of Klipper virtualenv failed!"
