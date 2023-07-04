@@ -58,10 +58,24 @@ function kiauh_update_avail() {
   fi
 }
 
+function check_if_update() {
+  local yn
+  read -p "Do you want to check for updates for KIAUH? (default: no) " yn
+  while true; do
+    case "${yn}" in
+      Y|y|Yes|yes)
+	do_action "kiauh_update_dialog"
+        break;;
+      *)
+	break;;
+    esac
+  done
+}
+
 function kiauh_update_dialog() {
   [[ ! $(kiauh_update_avail) == "true" ]] && return
   top_border
-  echo -e "|${green}              New KIAUH update available!              ${white}|"
+  echo -e "|${green}          New KIAUH Enhanced update available          ${white}|"
   hr
   echo -e "|${green}  View Changelog: https://git.io/JnmlX                 ${white}|"
   blank_line
@@ -88,5 +102,5 @@ function kiauh_update_dialog() {
 check_euid
 init_logfile
 set_globals
-kiauh_update_dialog
+check_if_update
 main_menu
