@@ -225,21 +225,22 @@ function run_klipper_setup() {
   [[ -d ${KLIPPER_DIR} ]] && rm -rf "${KLIPPER_DIR}"
 
   ### 1-1 extract from local
+  status_msg "Unzipping Klipper from ${OFFLINE_DIR} ..."
   local extracted_from_offline="false"
   if [[ -d "${OFFLINE_DIR}" ]]; then
      matched_repos=$(find "${OFFLINE_DIR}" -type f -name "klipper-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
      if [[ -n "$matched_repos" ]]; then
        local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
        local repo_name=$(basename "${latest_matched_repo}" .zip)
-       status_msg "Unzipping Klipper from ${latest_matched_repo}"
        unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
        mv ${OFFLINE_DIR}/${repo_name} ${KLIPPER_DIR}
-       rm -fr ${OFFLINE_DIR}/${repo_name}
        extracted_from_offline="true"
        ok_msg "Extracting complete!"
      else
-       status_msg "No offline package available!"
+       warn_msg "No offline package available, skip local step."
      fi
+  else
+    warn_msg "Offline directory does not exist, skip local step."
   fi
 
   ### 1-2 clone from remote

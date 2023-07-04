@@ -19,6 +19,10 @@ function install_ui() {
   echo -e "|  all necessary dependencies for the various           |"
   echo -e "|  functions on a completely fresh system.              |"
   hr
+  echo -e "| Installation Mode:                                    |"
+  echo -e "|  0) [Offline directory]                               |"
+  printf "|     %-50s|\n" "(current: ${OFFLINE_DIR})"
+  hr
   echo -e "| Firmware & API:          | 3rd Party Webinterface:    |"
   echo -e "|  1) [Klipper]            |  6) [OctoPrint]            |"
   echo -e "|  2) [Moonraker]          |                            |"
@@ -33,6 +37,11 @@ function install_ui() {
   echo -e "|                          | 12) [Crowsnest]            |"
   echo -e "|                          | 13) [MJPG-Streamer]        |"
   back_footer
+}
+
+function set_offline_dir() {
+  read -p "Enter a new offline directory: " path
+  OFFLINE_DIR=${path}
 }
 
 function install_menu() {
@@ -50,6 +59,8 @@ function install_menu() {
   while true; do
     read -p "${cyan}####### Perform action:${white} " action
     case "${action}" in
+      0)
+	do_action "set_offline_dir" "install_ui";;
       1)
         do_action "start_klipper_setup" "install_ui";;
       2)
