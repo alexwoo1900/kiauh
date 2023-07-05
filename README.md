@@ -26,10 +26,18 @@ Support adding temporary package source or mirror.
 
 ### 📋 Offline installation
 KIAUH Enhanced provides users with an entry point for local installation packages. This entry is represented as a custom folder that needs to be configured. Users only need to put specific software compressed packages in it and then proceed with the normal installation process.  
-KIAUH增强版给用户提供了一个本地安装包的入口。这个入口是一个自定义的文件夹。用户只需要把特定的软件压缩包放进去，然后进行正常的安装流程即可。
+KIAUH增强版给用户提供了一个本地安装包的入口。这个入口是一个自定义的文件夹。用户只需要把特定的软件压缩包放进去，然后进行正常的安装流程即可。  
 
-Project | Offline | custom source
+The format of the compressed package follows Github's project naming, which is project-branch.zip. The user only need to download the Github automatically packaged zip file.  
+压缩包的格式遵从github的项目命名，即project-branch.zip。用户只需要使用github自动打包的zip文件即可。  
+`Project page` ->`Code` ->`Download ZIP`
+
+
+Project | Offline installation | Temporary source
 -|-|-
 Klipper | Yes | Yes
-Octoprint | Not yet | Yes
-MJPG-Streamer | Yes | Not yet
+Mailsail | Yes | Unnecessary
+Moonraker | Yes | Yes
+KlipperScreen | Yes | Unnecessary
+Octoprint | Unnecessary | Yes
+MJPG-Streamer | Yes | Unnecessary

@@ -48,12 +48,35 @@ function klipperscreen_setup() {
 
   # force remove existing KlipperScreen dir
   [[ -d ${KLIPPERSCREEN_DIR} ]] && rm -rf "${KLIPPERSCREEN_DIR}"
+  
+  ### extract from local
+  status_msg "Unzipping KlipperScreen from ${OFFLINE_DIR}"
+  local extracted_from_offline="false"
+  if [[ -d "${OFFLINE_DIR}" ]]; then
+     matched_repos=$(find "${OFFLINE_DIR}" -type f -name "KlipperScreen-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
+     if [[ -n "$matched_repos" ]]; then
+       local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
+       local repo_name=$(basename "${latest_matched_repo}" .zip)
+       unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
+       mv ${OFFLINE_DIR}/${repo_name} ${KLIPPERSCREEN_DIR}
+       extracted_from_offline="true"
+       ok_msg "Extracting complete!"
+     else
+       warn_msg "No offline package available, skip local step."
+     fi
+  else
+    warn_msg "Offline directory does not exist, skip local step."
+  fi
 
-  # clone into fresh KlipperScreen dir
-  cd "${HOME}" || exit 1
-  if ! git clone "${KLIPPERSCREEN_REPO}" "${KLIPPERSCREEN_DIR}"; then
-    print_error "Cloning KlipperScreen from\n ${KLIPPERSCREEN_REPO}\n failed!"
-    exit 1
+  ### clone from remote
+  if [[ ${extracted_from_offline} == "false" ]]; then
+    status_msg "Cloning KlipperScreen from ${KLIPPERSCREEN_REPO} ..."
+    cd "${HOME}" || exit 1
+    if ! git clone "${KLIPPERSCREEN_REPO}" "${KLIPPERSCREEN_DIR}"; then
+      print_error "Cloning KlipperScreen from\n ${KLIPPERSCREEN_REPO}\n failed!"
+      exit 1
+    fi
+    ok_msg "Cloning complete!"
   fi
 
   status_msg "Installing KlipperScreen ..."

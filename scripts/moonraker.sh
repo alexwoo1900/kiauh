@@ -166,8 +166,8 @@ function create_moonraker_virtualenv() {
   [[ -d ${MOONRAKER_ENV} ]] && rm -rf "${MOONRAKER_ENV}"
 
   if virtualenv -p /usr/bin/python3 "${MOONRAKER_ENV}"; then
-    "${MOONRAKER_ENV}"/bin/pip install -U pip
-    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt"
+    "${MOONRAKER_ENV}"/bin/pip install -U pip ${PIP_INSTALL_OPTIONS}
+    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt" ${PIP_INSTALL_OPTIONS}
   else
     log_error "failure while creating python3 moonraker-env"
     error_msg "Creation of Moonraker virtualenv failed!"
@@ -183,9 +183,34 @@ function moonraker_setup() {
   dep+=(libjpeg-dev zlib1g-dev)
   dependency_check "${dep[@]}"
 
-  ### step 1: clone moonraker
-  clone_moonraker "${MOONRAKER_REPO}"
+  ### step 1: get moonraker
+  [[ -d ${MOONRAKER_DIR} ]] && rm -rf "${MOONRAKER_DIR}"
+  
+  ### 1-1 extract from local
+  status_msg "Unzipping moonraker from ${OFFLINE_DIR}"
+  local extracted_from_offline="false"
+  if [[ -d "${OFFLINE_DIR}" ]]; then
+     matched_repos=$(find "${OFFLINE_DIR}" -type f -name "moonraker-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
+     if [[ -n "$matched_repos" ]]; then
+       local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
+       local repo_name=$(basename "${latest_matched_repo}" .zip)
+       unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
+       mv ${OFFLINE_DIR}/${repo_name} ${MOONRAKER_DIR}
+       extracted_from_offline="true"
+       ok_msg "Extracting complete!"
+     else
+       warn_msg "No offline package available, skip local step."
+     fi
+  else
+    warn_msg "Offline directory does not exist, skip local step."
+  fi
 
+  ### 1-2 clone from remote
+  if [[ ${extracted_from_offline} == "false" ]]; then
+    clone_moonraker "${MOONRAKER_REPO}"
+    ok_msg "Cloning complete!"
+  fi
+  
   ### step 2: install moonraker dependencies and create python virtualenv
   status_msg "Installing dependencies ..."
   install_moonraker_dependencies
@@ -215,9 +240,6 @@ function clone_moonraker() {
   local repo=${1}
 
   status_msg "Cloning Moonraker from ${repo} ..."
-
-  ### force remove existing moonraker dir and clone into fresh moonraker dir
-  [[ -d ${MOONRAKER_DIR} ]] && rm -rf "${MOONRAKER_DIR}"
 
   cd "${HOME}" || exit 1
   if ! git clone "${MOONRAKER_REPO}" "${MOONRAKER_DIR}"; then
@@ -564,7 +586,7 @@ function update_moonraker() {
     ### read PKGLIST and install possible new dependencies
     install_moonraker_dependencies
     ### install possible new python dependencies
-    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt"
+    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt" ${PIP_INSTALL_OPTIONS}
   fi
 
   ### required due to https://github.com/Arksine/moonraker/issues/349
