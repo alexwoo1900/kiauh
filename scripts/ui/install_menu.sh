@@ -11,42 +11,83 @@
 
 set -e
 
+TEST_PIP_INDEX_URL="false"
+PIP_INSTALL_OPTIONS=""
+PIP_INDEX_URL=""
+
+function toggle_pip_index_url_test() {
+  if [[ $TEST_PIP_INDEX_URL == "false" ]]; then
+    TEST_PIP_INDEX_URL="true"
+  else
+    TEST_PIP_INDEX_URL="false"
+  fi
+}
+
+function set_pip_index_url() {
+  while true; do
+    read -p "Enter a new pip index url (https://pypi.org/simple): " url
+
+    if [[ $url =~ ^(http|https)://.*$ ]]; then
+      PIP_INDEX_URL=$url
+      PIP_INSTALL_OPTIONS=${PIP_INSTALL_OPTIONS}" -i ${PIP_INDEX_URL} "
+      break
+    else
+      echo "Illegal pip index url!"
+    fi
+  done
+}
+
+function process_pip_index_url() {
+  if [[ -z $PIP_INDEX_URL ]]; then
+    PIP_INDEX_URL="https://pypi.org/simple"
+  fi
+  local domain=$(echo $PIP_INDEX_URL | sed -E -e 's_.*://([^/@]*@)?([^/:]+).*_\2_')
+  if [[ $domain =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+    if [[ $TEST_PIP_INDEX_URL == "true" ]]; then
+      local delay=$(ping -c 4 -W 1 $domain | awk -F '/' 'END{if ($5 == "") {print "(Unreachable)"} else {print $5"ms"}}')
+      echo "$PIP_INDEX_URL $delay"
+    else
+      echo "$PIP_INDEX_URL"
+    fi
+  else
+    echo "Illegal pip index url"
+  fi
+}
+
 function install_ui() {
   top_border
-  echo -e "|     ${green}~~~~~~~~~~~ [ Installation Menu ] ~~~~~~~~~~~${white}     |"
-  hr
-  echo -e "|  You need this menu usually only for installing       |"
-  echo -e "|  all necessary dependencies for the various           |"
-  echo -e "|  functions on a completely fresh system.              |"
+  echo -e "|     ${green}~~~~~~~~~ [ Installation Settings ] ~~~~~~~~~${white}     |"
   hr
   echo -e "|                                                       |"
-  echo -e "| Installation:                                         |"
-  echo -e "|  0) [Offline]                                         |"
-  printf "|     %-50s|\n" "directory: ${OFFLINE_DIR}"
+  echo -e "| Offline root:                                         |"
+  printf "|     %-50s|\n" "${OFFLINE_DIR}"
+  echo -e "|  1) [Reset]                                           |"
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
-  echo -e "| Mirror & Source:                                      |"
-  echo -e "|  1) [Github]                                          |"
-  echo -e "|  2) [pip]                                             |"
-  printf "|     %-50s|\n" "source: $([[ -z ${PIP_BASE_URL} ]] && printf "default" || printf ${PIP_BASE_URL})"
-  printf "|     %-50s|\n" "extra-source: $([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//") || printf "empty")"
+  echo -e "| pip index:                                            |"
+  printf "|     %-50s|\n" "$(process_pip_index_url)"
+  printf "|     %-50s|\n" "$([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//")" (extra)" || printf "empty")"
+  printf "|  %-53s|\n" "2) [Test $([[ $TEST_PIP_INDEX_URL == "false" ]] && printf "On" || printf "Off")]"
+  echo -e "|  3) [Reset]                                           |"
   echo -e "|                                                       |"
+  hr
+  echo -e "|     ${green}~~~~~~~~~~ [ Available packages ] ~~~~~~~~~~~${white}     |"
   hr
   echo -e "|                          |                            |"
   echo -e "| Firmware & API:          | 3rd Party Webinterface:    |"
-  echo -e "|  3) [Klipper]            |  8) [OctoPrint]            |"
-  echo -e "|  4) [Moonraker]          |                            |"
+  echo -e "|  4) [Klipper]            |  9) [OctoPrint]            |"
+  echo -e "|  5) [Moonraker]          |                            |"
   echo -e "|                          | Other:                     |"
-  echo -e "| Klipper Webinterface:    |  9) [PrettyGCode]          |"
-  echo -e "|  5) [Mainsail]           | 10) [Telegram Bot]         |"
-  echo -e "|  6) [Fluidd]             | 11) $(obico_install_title) |"
-  echo -e "|                          | 12) [OctoEverywhere]       |"
-  echo -e "|                          | 13) [Mobileraker]          |"
-  echo -e "| Touchscreen GUI:         |                            |"
-  echo -e "|  7) [KlipperScreen]      | Webcam Streamer:           |"
-  echo -e "|                          | 14) [Crowsnest]            |"
-  echo -e "|                          | 15) [MJPG-Streamer]        |"
+  echo -e "| Klipper Webinterface:    | 10) [PrettyGCode]          |"
+  echo -e "|  6) [Mainsail]           | 11) [Telegram Bot]         |"
+  echo -e "|  7) [Fluidd]             | 12) $(obico_install_title) |"
+  echo -e "|                          | 13) [OctoEverywhere]       |"
+  echo -e "| Touchscreen GUI:         | 14) [Mobileraker]          |"
+  echo -e "|  8) [KlipperScreen]      |                            |"
+  echo -e "|                          | Webcam Streamer:           |"
+  echo -e "|                          | 15) [Crowsnest]            |"
+  echo -e "|                          | 16) [MJPG-Streamer]        |"
   echo -e "|                          |                            |"
   back_footer
 }
@@ -73,35 +114,37 @@ function install_menu() {
   while true; do
     read -p "${cyan}####### Perform action:${white} " action
     case "${action}" in
-      0)
+      1)
 	do_action "set_offline_dir" "install_ui";;
       2)
-	do_action "set_pip_base" "install_ui";;
+	do_action "toggle_pip_index_url_test" "install_ui";;
       3)
-        do_action "start_klipper_setup" "install_ui";;
+	do_action "set_pip_index_url" "install_ui";;
       4)
-        do_action "moonraker_setup_dialog" "install_ui";;
+        do_action "start_klipper_setup" "install_ui";;
       5)
-        do_action "install_mainsail" "install_ui";;
+        do_action "moonraker_setup_dialog" "install_ui";;
       6)
-        do_action "install_fluidd" "install_ui";;
+        do_action "install_mainsail" "install_ui";;
       7)
-        do_action "install_klipperscreen" "install_ui";;
+        do_action "install_fluidd" "install_ui";;
       8)
-        do_action "octoprint_setup_dialog" "install_ui";;
+        do_action "install_klipperscreen" "install_ui";;
       9)
-        do_action "install_pgc_for_klipper" "install_ui";;
+        do_action "octoprint_setup_dialog" "install_ui";;
       10)
-        do_action "telegram_bot_setup_dialog" "install_ui";;
+        do_action "install_pgc_for_klipper" "install_ui";;
       11)
-        do_action "moonraker_obico_setup_dialog" "install_ui";;
+        do_action "telegram_bot_setup_dialog" "install_ui";;
       12)
-        do_action "octoeverywhere_setup_dialog" "install_ui";;
+        do_action "moonraker_obico_setup_dialog" "install_ui";;
       13)
-        do_action "install_mobileraker" "install_ui";;
+        do_action "octoeverywhere_setup_dialog" "install_ui";;
       14)
-        do_action "install_crowsnest" "install_ui";;
+        do_action "install_mobileraker" "install_ui";;
       15)
+        do_action "install_crowsnest" "install_ui";;
+      16)
 	do_action "install_mjpg-streamer" "install_ui";;
       B|b)
         clear; main_menu; break;;
