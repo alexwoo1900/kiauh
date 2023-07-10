@@ -135,7 +135,7 @@ function download_fluidd_macros() {
        local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
        local repo_name=$(basename "${latest_matched_repo}" .zip)
        unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
-       mv ${OFFLINE_DIR}/${repo_name} ${HOME}/mainsail-config
+       mv ${OFFLINE_DIR}/${repo_name} ${HOME}/fluidd-config
        extracted_from_offline="true"
        ok_msg "Extracting complete!"
      else
