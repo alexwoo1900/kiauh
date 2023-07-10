@@ -122,48 +122,75 @@ function download_fluidd_macros() {
     return
   fi
 
-  status_msg "Cloning fluidd-config ..."
+
   [[ -d "${HOME}/fluidd-config" ]] && rm -rf "${HOME}/fluidd-config"
-  if git clone --recurse-submodules "${ms_cfg_repo}" "${HOME}/fluidd-config"; then
-    for config in ${configs}; do
-      path=$(echo "${config}" | rev | cut -d"/" -f2- | rev)
+  
+  
+  ### extract from local
+  status_msg "Unzipping fluidd-config from ${OFFLINE_DIR}"
+  local extracted_from_offline="false"
+  if [[ -d "${OFFLINE_DIR}" ]]; then
+     matched_repos=$(find "${OFFLINE_DIR}" -type f -name "fluidd-config-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
+     if [[ -n "$matched_repos" ]]; then
+       local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
+       local repo_name=$(basename "${latest_matched_repo}" .zip)
+       unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
+       mv ${OFFLINE_DIR}/${repo_name} ${HOME}/mainsail-config
+       extracted_from_offline="true"
+       ok_msg "Extracting complete!"
+     else
+       warn_msg "No offline package available, skip local step."
+     fi
+  else
+    warn_msg "Offline directory does not exist, skip local step."
+  fi
 
-      if [[ -e "${path}/fluidd.cfg" && ! -h "${path}/fluidd.cfg" ]]; then
-        warn_msg "Attention! Existing fluidd.cfg detected!"
-        warn_msg "The file will be renamed to 'fluidd.bak.cfg' to be able to continue with the installation."
-        if ! mv "${path}/fluidd.cfg" "${path}/fluidd.bak.cfg"; then
-          error_msg "Renaming fluidd.cfg failed! Aborting installation ..."
-          return
-        fi
-      fi
+  ### clone from remote
+  if [[ ${extracted_from_offline} == "false" ]]; then
+    status_msg "Cloning fluidd-config from ${ms_cfg_repo} ..."
+    cd "${HOME}" || exit 1
+    if ! git clone --recurse-submodules "${ms_cfg_repo}" "${HOME}/fluidd-config"; then
+      print_error "Cloning failed! Aborting installation ..."
+      log_error "execution stopped! reason: cloning failed"
+      return
+    fi
+    ok_msg "Cloning complete!"
+  fi
+  
+  for config in ${configs}; do
+    path=$(echo "${config}" | rev | cut -d"/" -f2- | rev)
 
-      if [[ -h "${path}/fluidd.cfg" ]]; then
-        warn_msg "Recreating symlink in ${path} ..."
-        rm -rf "${path}/fluidd.cfg"
-      fi
-
-      if ! ln -sf "${HOME}/fluidd-config/client.cfg" "${path}/fluidd.cfg"; then
-        error_msg "Creating symlink failed! Aborting installation ..."
+    if [[ -e "${path}/fluidd.cfg" && ! -h "${path}/fluidd.cfg" ]]; then
+      warn_msg "Attention! Existing fluidd.cfg detected!"
+      warn_msg "The file will be renamed to 'fluidd.bak.cfg' to be able to continue with the installation."
+      if ! mv "${path}/fluidd.cfg" "${path}/fluidd.bak.cfg"; then
+        error_msg "Renaming fluidd.cfg failed! Aborting installation ..."
         return
       fi
+    fi
 
-      if ! grep -Eq "^\[include fluidd.cfg\]$" "${path}/printer.cfg"; then
-        log_info "${path}/printer.cfg"
-        sed -i "1 i [include fluidd.cfg]" "${path}/printer.cfg"
-      fi
+    if [[ -h "${path}/fluidd.cfg" ]]; then
+      warn_msg "Recreating symlink in ${path} ..."
+      rm -rf "${path}/fluidd.cfg"
+    fi
 
-      line=$(($(grep -n "\[include fluidd.cfg\]" "${path}/printer.cfg" | tail -1 | cut -d: -f1) + 1))
-      gcode_dir=${path/config/gcodes}
-      if ! grep -Eq "^\[virtual_sdcard\]$" "${path}/printer.cfg"; then
-        log_info "${path}/printer.cfg"
-        sed -i "${line} i \[virtual_sdcard]\npath: ${gcode_dir}\non_error_gcode: CANCEL_PRINT\n" "${path}/printer.cfg"
-      fi
-    done
-  else
-    print_error "Cloning failed! Aborting installation ..."
-    log_error "execution stopped! reason: cloning failed"
-    return
-  fi
+    if ! ln -sf "${HOME}/fluidd-config/client.cfg" "${path}/fluidd.cfg"; then
+      error_msg "Creating symlink failed! Aborting installation ..."
+      return
+    fi
+
+    if ! grep -Eq "^\[include fluidd.cfg\]$" "${path}/printer.cfg"; then
+      log_info "${path}/printer.cfg"
+      sed -i "1 i [include fluidd.cfg]" "${path}/printer.cfg"
+    fi
+
+    line=$(($(grep -n "\[include fluidd.cfg\]" "${path}/printer.cfg" | tail -1 | cut -d: -f1) + 1))
+    gcode_dir=${path/config/gcodes}
+    if ! grep -Eq "^\[virtual_sdcard\]$" "${path}/printer.cfg"; then
+      log_info "${path}/printer.cfg"
+      sed -i "${line} i \[virtual_sdcard]\npath: ${gcode_dir}\non_error_gcode: CANCEL_PRINT\n" "${path}/printer.cfg"
+    fi
+  done
 
   patch_fluidd_config_update_manager
 

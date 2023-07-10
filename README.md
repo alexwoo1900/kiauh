@@ -35,9 +35,10 @@ The format of the compressed package follows Github's project naming, which is p
 
 Project | Offline installation | Temporary source
 -|-|-
+Fluidd | Yes | Unnecessary
 Klipper | Yes | Yes
-Mailsail | Yes | Unnecessary
-Moonraker | Yes | Yes
 KlipperScreen | Yes | Unnecessary
-Octoprint | Unnecessary | Yes
+Mailsail | Yes | Unnecessary
 MJPG-Streamer | Yes | Unnecessary
+Moonraker | Yes | Yes
+Octoprint | Unnecessary | Yes
