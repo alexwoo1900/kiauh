@@ -44,11 +44,12 @@ function process_pip_index_url() {
   local domain=$(echo $PIP_INDEX_URL | sed -E -e 's_.*://([^/@]*@)?([^/:]+).*_\2_')
   if [[ $domain =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
     if [[ $TEST_PIP_INDEX_URL == "true" ]]; then
-      local delay=$(ping -c 4 -W 1 $domain | awk -F '/' 'END{if ($5 == "") {print "(Unreachable)"} else {print $5"ms"}}')
+      local delay=$(ping -c 4 -W 1 $domain | awk -F '/' 'END{if ($5 == "") {print "\033[31mUnreachable\033[37m"} else {print "\033[32m"$5"ms\033[37m"}}')
       echo "$PIP_INDEX_URL $delay"
     else
       echo "$PIP_INDEX_URL"
     fi
+    
   else
     echo "Illegal pip index url"
   fi
@@ -56,7 +57,7 @@ function process_pip_index_url() {
 
 function install_ui() {
   top_border
-  echo -e "|     ${green}~~~~~~~~~ [ Installation Settings ] ~~~~~~~~~${white}     |"
+  echo -e "|   ${green}~~~~~~~~~ [ Installation Configuration ] ~~~~~~~~~${white}  |"
   hr
   echo -e "|                                                       |"
   echo -e "| Offline root:                                         |"
@@ -66,9 +67,14 @@ function install_ui() {
   hr
   echo -e "|                                                       |"
   echo -e "| pip index:                                            |"
-  printf "|     %-50s|\n" "$(process_pip_index_url)"
-  printf "|     %-50s|\n" "$([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//")" (extra)" || printf "empty")"
-  printf "|  %-53s|\n" "2) [Test $([[ $TEST_PIP_INDEX_URL == "false" ]] && printf "On" || printf "Off")]"
+  printf "|     %-50s|\n" "$([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//")" (from pip.conf)" || printf "empty")"
+  if [[ $TEST_PIP_INDEX_URL == "false" ]]; then
+    printf "|     %-50s|\n" "$(process_pip_index_url)"
+    printf "|  %-53s|\n" "2) [Test On]"
+  else
+    printf "|     %-60s|\n" "$(process_pip_index_url)"
+    printf "|  %-53s|\n" "2) [Test Off]" 
+  fi
   echo -e "|  3) [Reset]                                           |"
   echo -e "|                                                       |"
   hr

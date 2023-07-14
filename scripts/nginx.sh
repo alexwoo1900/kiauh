@@ -11,6 +11,19 @@
 
 set -e
 
+function get_nginx_status() {
+  local status
+  
+  local state=$(systemctl is-active nginx)
+  if [[ $state == "active" ]]; then
+    status="Running!"
+  else
+    status="Not running!"
+  fi
+  
+  echo "${status}"
+}
+
 #===================================================#
 #=================== REMOVE NGINX ==================#
 #===================================================#
