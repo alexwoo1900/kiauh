@@ -135,6 +135,7 @@ function remove_crowsnest(){
 get_crowsnest_status(){
   local -a files
   local env_file
+  local state
   env_file="$(grep "EnvironmentFile" /etc/systemd/system/crowsnest.service 2>/dev/null | cut -d "=" -f2)"
   files=(
     "${CROWSNEST_DIR}"
@@ -150,7 +151,12 @@ get_crowsnest_status(){
     [[ -e "${file}" ]] && count=$(( count +1 ))
   done
   if [[ "${count}" -eq "${#files[*]}" ]]; then
-    echo "Installed"
+    state=$(systemctl is-active crowsnest)
+    if [[ $state == "active" ]]; then
+      echo "Running!"
+    else
+      echo "Not running!"
+    fi
   elif [[ "${count}" -gt 0 ]]; then
     echo "Incomplete!"
   else

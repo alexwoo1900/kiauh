@@ -11,6 +11,34 @@
 
 set -e
 
+function get_mjpg-streamer_status() {
+  local -a files
+  local state
+  files=(
+    "/usr/local/bin/webcamd"
+    "/etc/logrotate.d/webcamd"
+    "/etc/systemd/system/webcamd.service"
+    )
+  local count
+  count=0
+
+  for file in "${files[@]}"; do
+    [[ -e "${file}" ]] && count=$(( count +1 ))
+  done
+  if [[ "${count}" -eq "${#files[*]}" ]]; then
+    state=$(systemctl is-active webcamd)
+    if [[ $state == "active" ]]; then
+      echo "Running!"
+    else
+      echo "Not running!"
+    fi
+  elif [[ "${count}" -gt 0 ]]; then
+    echo "Incomplete!"
+  else
+    echo "Not installed!"
+  fi
+}
+
 #=================================================#
 #============= INSTALL MJPG-STREAMER =============#
 #=================================================#
