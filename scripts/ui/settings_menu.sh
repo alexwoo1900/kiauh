@@ -11,9 +11,29 @@
 
 set -e
 
+TEST_GITHUB_BASE="false"
+GITHUB_BASE="https://github.com"
 TEST_PIP_INDEX_URL="false"
 PIP_INSTALL_OPTIONS=""
 PIP_INDEX_URL=""
+
+function toggle_github_base_test() {
+  if [[ $TEST_GITHUB_BASE == "false" ]]; then
+    TEST_GITHUB_BASE="true"
+  else
+    TEST_GITHUB_BASE="false"
+  fi
+}
+
+function process_github_base() {
+  local domain=$(echo $GITHUB_BASE | sed -E -e 's_.*://([^/@]*@)?([^/:]+).*_\2_')
+  if [[ $TEST_GITHUB_BASE == "true" ]]; then
+    local delay=$(ping -c 4 -W 1 $domain | awk -F '/' 'END{if ($5 == "") {printf "\033[31mx Unreachable\033[37m"} else {printf "\033[32m~ "$5"ms\033[37m"}}')
+    echo "$GITHUB_BASE $delay"
+  else
+    echo "$GITHUB_BASE $delay"
+  fi
+}
 
 function toggle_pip_index_url_test() {
   if [[ $TEST_PIP_INDEX_URL == "false" ]]; then
@@ -22,6 +42,7 @@ function toggle_pip_index_url_test() {
     TEST_PIP_INDEX_URL="false"
   fi
 }
+
 
 function set_pip_index_url() {
   while true; do
@@ -103,42 +124,48 @@ function settings_ui() {
   echo -e "|     $(title_msg "~~~~~~~~~~~~ [ KIAUH Settings ] ~~~~~~~~~~~~~")     |"
   hr
   echo -e "|                                                       |"
-  echo -e "| Offline:                                              |"
-  echo -e "|   ● root:                                             |"
+  echo -e "| Source:                                               |"
+  echo -e "|   ● Offline root:                                     |"
   printf "|     %-60s|\n" "${cyan}${OFFLINE_DIR}${white}"
   echo -e "|     1) [Reset]                                        |"
   echo -e "|                                                       |"
-  hr
+  echo -e "|   ● Github base:                                      |"
+  if [[ $TEST_GITHUB_BASE == "false" ]]; then
+    printf "|     %-60s|\n" "${cyan}$(process_github_base)${white}"
+    printf "|     %-50s|\n" "2) [Test On]"
+  else
+    printf "|     %-70s|\n" "${cyan}$(process_github_base)${white}"
+    printf "|     %-50s|\n" "2) [Test Off]" 
+  fi
   echo -e "|                                                       |"
-  echo -e "| pip:                                                  |"
-  echo -e "|   ● index:                                            |"
+  echo -e "|   ● pip index:                                        |"
   printf "|     %-50s|\n" "$([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//")" (from pip.conf)" || printf "empty")"
   if [[ $TEST_PIP_INDEX_URL == "false" ]]; then
     printf "|     %-60s|\n" "${cyan}$(process_pip_index_url)${white}"
-    printf "|     %-50s|\n" "2) [Test On]"
+    printf "|     %-50s|\n" "3) [Test On]"
   else
     printf "|     %-70s|\n" "${cyan}$(process_pip_index_url)${white}"
-    printf "|     %-50s|\n" "2) [Test Off]" 
+    printf "|     %-50s|\n" "3) [Test Off]" 
   fi
-  echo -e "|     3) [Reset]                                        |"
+  echo -e "|     4) [Reset]                                        |"
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Klipper:                                              |"
   echo -e "|   ● Repository:                                       |"
   printf  "|     %-70s|\n" "${custom_repo} (${custom_branch})"
-  echo -e "|     4) [Reset]                                        |"
+  echo -e "|     5) [Reset]                                        |"
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Fluidd:                                               |"
   echo -e "|   ● release:                                          |"
   if [[ ${fl_pre_rls} == "false" ]]; then
-    printf  "|     %-70s|\n" "Disallow unstable version"
-    echo -e "|     5) [Allow]                                        |"
+    printf  "|     %-50s|\n" "Disallow unstable version"
+    echo -e "|     6) [Allow]                                        |"
   else
-    printf  "|     %-70s|\n" "Allow unstable version"
-    echo -e "|     5) [Disallow]                                     |"
+    printf  "|     %-50s|\n" "Allow unstable version"
+    echo -e "|     6) [Disallow]                                     |"
   fi
   echo -e "|                                                       |"
   hr
@@ -146,24 +173,25 @@ function settings_ui() {
   echo -e "| Mainsail:                                             |"
   echo -e "|   ● release:                                          |"
   if [[ ${ms_pre_rls} == "false" ]]; then
-    printf  "|     %-70s|\n" "Disallow unstable version"
-    echo -e "|     6) [Allow]                                        |"
+    printf  "|     %-50s|\n" "Disallow unstable version"
+    echo -e "|     7) [Allow]                                        |"
   else
-    printf  "|     %-70s|\n" "Allow unstable version"
-    echo -e "|     6) [Disallow]                                     |"
+    printf  "|     %-50s|\n" "Allow unstable version"
+    echo -e "|     7) [Disallow]                                     |"
   fi
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
-  printf  "| Backup before updating: %-42s|\n" "${bbu}"
-  echo -e "|                                                       |"
-  hr
-  blank_line
+  echo -e "| Others:                                               |"
   if [[ ${backup_before_update} == "false" ]]; then
-  echo -e "| 7) ${green}Enable${white} automatic backups before updates            |"
+    printf  "|     %-50s|\n" "No backup before update"
+    echo -e "|     8) [Do backup]                                    |"
   else
-  echo -e "| 7) ${red}Disable${white} automatic backups before updates           |"
+    printf  "|     %-50s|\n" "Backup before update"
+    echo -e "|     8) [No backup]                                    |"
   fi
+  echo -e "|                                                       |"
+  blank_line
   back_help_footer
 }
 
@@ -223,23 +251,27 @@ function settings_menu() {
         settings_ui;;
       2)
         clear && print_header
-	      toggle_pip_index_url_test
+	      toggle_github_base_test
         settings_ui;;
       3)
         clear && print_header
-	      set_pip_index_url
+	      toggle_pip_index_url_test
         settings_ui;;
       4)
         clear && print_header
-        change_klipper_repo_menu
+	      set_pip_index_url
         settings_ui;;
       5)
+        clear && print_header
+        change_klipper_repo_menu
+        settings_ui;;
+      6)
         switch_mainsail_releasetype
         settings_menu;;
-      6)
+      7)
         switch_fluidd_releasetype
         settings_menu;;
-      7)
+      8)
         toggle_backup_before_update
         settings_menu;;
       B|b)
