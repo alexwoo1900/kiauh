@@ -15,39 +15,34 @@ function main_ui() {
   top_border
   echo -e "|     $(title_msg "~~~~~~~~~~~~~~~ [ Main Menu ] ~~~~~~~~~~~~~~~")     |"
   hr
-  echo -e "|                  |                                    |"
-  echo -e "|                  |  [Firmware]                        |"
-  echo -e "|                  |  Klipper:        $(print_status "klipper")|"
-  echo -e "|                  |     Repo:        $(print_klipper_repo)|"
-  echo -e "|                  |                                    |"
-  echo -e "|  0) [Log-Upload] |  [Screen]                          |"
-  echo -e "|                  |  KlipperScreen:  $(print_status "klipperscreen")|"
-  echo -e "|  1) [Install]    |                                    |"
-  echo -e "|                  |  [API]                             |"
-  echo -e "|  2) [Update]     |  Moonraker:      $(print_status "moonraker")|"
-  echo -e "|                  |                                    |"
-  echo -e "|  3) [Remove]     |  [WebUI]                           |"
-  echo -e "|                  |  Nginx:          $(print_status "nginx")|"
-  echo -e "|  4) [Advanced]   |    |                               |"
-  echo -e "|                  |    +--- Fluidd:  $(print_status "fluidd")|"
-  echo -e "|  6) [Settings]   |    |                               |"
-  echo -e "|                  |    +- Mainsail:  $(print_status "mainsail")|"
-  echo -e "|                  |                                    |"
-  echo -e "|                  |  Octoprint:      $(print_status "octoprint")|"
-  echo -e "|                  |                                    |"
-  echo -e "|                  |  [Webcam Streamer]                 |"
-  echo -e "|                  |  Crowsnest:      $(print_status "crowsnest")|"
-  echo -e "|                  |  MJPG-Streamer:  $(print_status "mjpg-streamer")|"
-  echo -e "|                  |                                    |"
-  echo -e "|                  |  [Others]                          |"
-  echo -e "|                  |  Telegram Bot:   $(print_status "telegram_bot")|"
-  echo -e "|                  |  Obico:          $(print_status "moonraker_obico")|"
-  echo -e "|                  |  OctoEverywhere: $(print_status "octoeverywhere")|"
-  echo -e "|                  |  Mobileraker:    $(print_status "mobileraker")|"
-  echo -e "|                  |                                    |"
-  echo -e "|                  |                                    |"
+  printf "|  %-50s   |\n" ""
+  printf "|  %-50s   |\n" "[Server]"
+  printf "|  %-50s   |\n" ""
+  local vendor_id=$(lscpu | grep "Vendor ID:" | awk -F":" '{print $2}' | sed 's/^ *//')
+  local model_name=$(lscpu | grep "Model name:" | awk -F":" '{print $2}' | sed 's/^ *//')
+  local arch=$(lscpu | grep "Architecture:" | awk -F":" '{print $2}' | sed 's/^ *//')
+  printf "|  %-50s   |\n" "Chip: ${vendor_id} ${model_name} ${arch}"
+  printf "|  %-50s   |\n" "OS Distribution: $(cat /etc/*-release | grep -E '^PRETTY_NAME' | awk -F'=' '{print $2}' | tr -d '"')"
+  printf "|  %-50s   |\n" "OS Kernel: $(uname -r)"
+  printf "|  %-50s   |\n" ""
   hr
-  echo -e "|  $(print_kiauh_version)|    Changelog: ${magenta}https://git.io/JnmlX${white} |"
+  echo -e "|                                    |                  |"
+  echo -e "|  [Application State]               |  0) <Log-Upload> |"
+  echo -e "|                                    |                  |"
+  echo -e "|  Klipper:        $(print_status "klipper")|  1) <Install>    |"
+  echo -e "|  KlipperScreen:  $(print_status "klipperscreen")|                  |"
+  echo -e "|  Moonraker:      $(print_status "moonraker")|  2) <Update>     |"
+  echo -e "|  Nginx:          $(print_status "nginx")|                  |"
+  echo -e "|  Fluidd:         $(print_status "fluidd")|  3) <Remove>     |"
+  echo -e "|  Mainsail:       $(print_status "mainsail")|                  |"
+  echo -e "|  Octoprint:      $(print_status "octoprint")|  4) <Advanced>   |"
+  echo -e "|  Crowsnest:      $(print_status "crowsnest")|                  |"
+  echo -e "|  MJPG-Streamer:  $(print_status "mjpg-streamer")|  6) <Settings>   |"
+  echo -e "|  Telegram Bot:   $(print_status "telegram_bot")|                  |"
+  echo -e "|  Obico:          $(print_status "moonraker_obico")|                  |"
+  echo -e "|  OctoEverywhere: $(print_status "octoeverywhere")|                  |"
+  echo -e "|  Mobileraker:    $(print_status "mobileraker")|                  |"
+  echo -e "|                                    |                  |"
   quit_footer
 }
 
@@ -101,7 +96,9 @@ function print_klipper_repo() {
   printf "%-28s" "${repo}"
 }
 
-
+function print_main_menu_header() {
+  print_header && print_server_info
+}
 
 function main_menu() {
   clear && print_header

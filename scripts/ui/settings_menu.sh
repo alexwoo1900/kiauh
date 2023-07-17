@@ -127,68 +127,68 @@ function settings_ui() {
   echo -e "| Source:                                               |"
   echo -e "|   ● Offline root:                                     |"
   printf "|     %-60s|\n" "${cyan}${OFFLINE_DIR}${white}"
-  echo -e "|     1) [Reset]                                        |"
+  echo -e "|     1) <Reset>                                        |"
   echo -e "|                                                       |"
   echo -e "|   ● Github base:                                      |"
   if [[ $TEST_GITHUB_BASE == "false" ]]; then
     printf "|     %-60s|\n" "${cyan}$(process_github_base)${white}"
-    printf "|     %-50s|\n" "2) [Test On]"
+    printf "|     %-50s|\n" "2) <Test On>"
   else
     printf "|     %-70s|\n" "${cyan}$(process_github_base)${white}"
-    printf "|     %-50s|\n" "2) [Test Off]" 
+    printf "|     %-50s|\n" "2) <Test Off>" 
   fi
   echo -e "|                                                       |"
   echo -e "|   ● pip index:                                        |"
   printf "|     %-50s|\n" "$([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//")" (from pip.conf)" || printf "empty")"
   if [[ $TEST_PIP_INDEX_URL == "false" ]]; then
     printf "|     %-60s|\n" "${cyan}$(process_pip_index_url)${white}"
-    printf "|     %-50s|\n" "3) [Test On]"
+    printf "|     %-50s|\n" "3) <Test On>"
   else
     printf "|     %-70s|\n" "${cyan}$(process_pip_index_url)${white}"
-    printf "|     %-50s|\n" "3) [Test Off]" 
+    printf "|     %-50s|\n" "3) <Test Off>" 
   fi
-  echo -e "|     4) [Reset]                                        |"
+  echo -e "|     4) <Reset>                                        |"
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Klipper:                                              |"
   echo -e "|   ● Repository:                                       |"
   printf  "|     %-70s|\n" "${custom_repo} (${custom_branch})"
-  echo -e "|     5) [Reset]                                        |"
+  echo -e "|     5) <Reset>                                        |"
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Fluidd:                                               |"
   echo -e "|   ● release:                                          |"
-  if [[ ${fl_pre_rls} == "false" ]]; then
-    printf  "|     %-50s|\n" "Disallow unstable version"
-    echo -e "|     6) [Allow]                                        |"
+  if [[ ${fluidd_install_unstable} == "false" ]]; then
+    printf  "|     %-60s|\n" "${red}Disallow${white} unstable version"
+    echo -e "|     6) <Allow>                                        |"
   else
-    printf  "|     %-50s|\n" "Allow unstable version"
-    echo -e "|     6) [Disallow]                                     |"
+    printf  "|     %-60s|\n" "${green}Allow${white} unstable version"
+    echo -e "|     6) <Disallow>                                     |"
   fi
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Mainsail:                                             |"
   echo -e "|   ● release:                                          |"
-  if [[ ${ms_pre_rls} == "false" ]]; then
-    printf  "|     %-50s|\n" "Disallow unstable version"
-    echo -e "|     7) [Allow]                                        |"
+  if [[ ${mainsail_install_unstable} == "false" ]]; then
+    printf  "|     %-60s|\n" "${red}Disallow${white} unstable version"
+    echo -e "|     7) <Allow>                                        |"
   else
-    printf  "|     %-50s|\n" "Allow unstable version"
-    echo -e "|     7) [Disallow]                                     |"
+    printf  "|     %-60s|\n" "${green}Allow${white} unstable version"
+    echo -e "|     7) <Disallow>                                     |"
   fi
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Others:                                               |"
   if [[ ${backup_before_update} == "false" ]]; then
-    printf  "|     %-50s|\n" "No backup before update"
-    echo -e "|     8) [Do backup]                                    |"
+    printf  "|     %-60s|\n" "${red}No backup${white} before update"
+    echo -e "|     8) <Do backup>                                    |"
   else
-    printf  "|     %-50s|\n" "Backup before update"
-    echo -e "|     8) [No backup]                                    |"
+    printf  "|     %-60s|\n" "${green}Backup${white} before update"
+    echo -e "|     8) <No backup>                                    |"
   fi
   echo -e "|                                                       |"
   blank_line
@@ -266,10 +266,10 @@ function settings_menu() {
         change_klipper_repo_menu
         settings_ui;;
       6)
-        switch_mainsail_releasetype
+        switch_fluidd_releasetype
         settings_menu;;
       7)
-        switch_fluidd_releasetype
+        switch_mainsail_releasetype
         settings_menu;;
       8)
         toggle_backup_before_update

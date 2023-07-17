@@ -48,8 +48,9 @@ function back_help_footer() {
 
 function print_header() {
   top_border
-  echo -e "|     $(title_msg "~~~~~~~~~~~~~ [ KIAUH Enhanced] ~~~~~~~~~~~~~")     |"
-  echo -e "|     $(title_msg "   Klipper Installation And Update Helper    ")     |"
+  echo -e "|     $(title_msg "~~~~~~~~~~~~~~~~~ [ KIAUH ] ~~~~~~~~~~~~~~~~~")     |"
+  local kiauh_version=$(print_kiauh_version)
+  printf "|               %-50s       |\n" "${cyan}Enhanced Edition ${kiauh_version}${white}"
   echo -e "|     $(title_msg "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")     |"
   bottom_border
 }
