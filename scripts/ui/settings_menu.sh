@@ -12,10 +12,7 @@
 set -e
 
 TEST_GITHUB_BASE="false"
-GITHUB_BASE="https://github.com"
 TEST_PIP_INDEX_URL="false"
-PIP_INSTALL_OPTIONS=""
-PIP_INDEX_URL=""
 
 function toggle_github_base_test() {
   if [[ $TEST_GITHUB_BASE == "false" ]]; then
@@ -25,13 +22,37 @@ function toggle_github_base_test() {
   fi
 }
 
+function get_github_base() {
+  local github_base=$(git config --get-regexp "^url\.https:\/\/github\.com\/" | awk '{print $2}')
+  if [[ -n $github_base ]]; then
+    echo $github_base
+  else
+    echo "https://github.com"
+  fi
+}
+
+function set_github_base() {
+  while true; do
+    read -p "Enter a github base url (https://gitclone.com/github.com/): " url
+
+    if [[ $url =~ ^(http|https)://.*$ ]]; then
+      git config --global url."https://github.com/".insteadOf $url
+      break
+    else
+      echo "No available github base!"
+      break
+    fi
+  done
+}
+
 function process_github_base() {
-  local domain=$(echo $GITHUB_BASE | sed -E -e 's_.*://([^/@]*@)?([^/:]+).*_\2_')
+  local github_base=$(get_github_base)
+  local domain=$(echo $github_base | sed -E -e 's_.*://([^/@]*@)?([^/:]+).*_\2_')
   if [[ $TEST_GITHUB_BASE == "true" ]]; then
     local delay=$(ping -c 4 -W 1 $domain | awk -F '/' 'END{if ($5 == "") {printf "\033[31mx Unreachable\033[37m"} else {printf "\033[32m~ "$5"ms\033[37m"}}')
-    echo "$GITHUB_BASE $delay"
+    echo "$github_base $delay"
   else
-    echo "$GITHUB_BASE $delay"
+    echo "$github_base $delay"
   fi
 }
 
@@ -43,14 +64,22 @@ function toggle_pip_index_url_test() {
   fi
 }
 
+function get_pip_index_url() {
+  local pip_index_url=$(sudo pip config --global get global.index-url)
+  if [[ $pip_index_url != ERROR* ]]; then
+    echo $pip_index_url
+  else
+    echo "https://pypi.org/simple"
+  fi
+}
+
 
 function set_pip_index_url() {
   while true; do
-    read -p "Enter a new pip index url (https://pypi.org/simple): " url
+    read -p "Enter a new pip index url (https://pypi.tuna.tsinghua.edu.cn/simple): " url
 
     if [[ $url =~ ^(http|https)://.*$ ]]; then
-      PIP_INDEX_URL=$url
-      PIP_INSTALL_OPTIONS=${PIP_INSTALL_OPTIONS}" -i ${PIP_INDEX_URL} "
+      sudo pip config --global set global.index-url $url
       break
     else
       echo "Illegal pip index url!"
@@ -59,16 +88,14 @@ function set_pip_index_url() {
 }
 
 function process_pip_index_url() {
-  if [[ -z $PIP_INDEX_URL ]]; then
-    PIP_INDEX_URL="https://pypi.org/simple"
-  fi
-  local domain=$(echo $PIP_INDEX_URL | sed -E -e 's_.*://([^/@]*@)?([^/:]+).*_\2_')
+  local pip_index_url=$(get_pip_index_url)
+  local domain=$(echo $pip_index_url | sed -E -e 's_.*://([^/@]*@)?([^/:]+).*_\2_')
   if [[ $domain =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
     if [[ $TEST_PIP_INDEX_URL == "true" ]]; then
       local delay=$(ping -c 4 -W 1 $domain | awk -F '/' 'END{if ($5 == "") {printf "\033[31mx Unreachable\033[37m"} else {printf "\033[32m~ "$5"ms\033[37m"}}')
-      echo "$PIP_INDEX_URL $delay"
+      echo "$pip_index_url $delay"
     else
-      echo "$PIP_INDEX_URL"
+      echo "$pip_index_url"
     fi
     
   else
@@ -137,42 +164,30 @@ function settings_ui() {
     printf "|     %-70s|\n" "${cyan}$(process_github_base)${white}"
     printf "|     %-50s|\n" "2) <Test Off>" 
   fi
+  echo -e "|     3) <Reset>                                        |"
   echo -e "|                                                       |"
   echo -e "|   ● pip index:                                        |"
-  printf "|     %-50s|\n" "$([[ -f "/etc/pip.conf" ]] && printf $(grep -E "^extra-index-url=" "/etc/pip.conf" | sed "s/extra-index-url=//")" (from pip.conf)" || printf "empty")"
   if [[ $TEST_PIP_INDEX_URL == "false" ]]; then
     printf "|     %-60s|\n" "${cyan}$(process_pip_index_url)${white}"
-    printf "|     %-50s|\n" "3) <Test On>"
+    printf "|     %-50s|\n" "4) <Test On>"
   else
     printf "|     %-70s|\n" "${cyan}$(process_pip_index_url)${white}"
-    printf "|     %-50s|\n" "3) <Test Off>" 
+    printf "|     %-50s|\n" "4) <Test Off>" 
   fi
-  echo -e "|     4) <Reset>                                        |"
+  echo -e "|     5) <Reset>                                        |"
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Klipper:                                              |"
   echo -e "|   ● Repository:                                       |"
   printf  "|     %-70s|\n" "${custom_repo} (${custom_branch})"
-  echo -e "|     5) <Reset>                                        |"
+  echo -e "|     6) <Reset>                                        |"
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
   echo -e "| Fluidd:                                               |"
   echo -e "|   ● release:                                          |"
   if [[ ${fluidd_install_unstable} == "false" ]]; then
-    printf  "|     %-60s|\n" "${red}Disallow${white} unstable version"
-    echo -e "|     6) <Allow>                                        |"
-  else
-    printf  "|     %-60s|\n" "${green}Allow${white} unstable version"
-    echo -e "|     6) <Disallow>                                     |"
-  fi
-  echo -e "|                                                       |"
-  hr
-  echo -e "|                                                       |"
-  echo -e "| Mainsail:                                             |"
-  echo -e "|   ● release:                                          |"
-  if [[ ${mainsail_install_unstable} == "false" ]]; then
     printf  "|     %-60s|\n" "${red}Disallow${white} unstable version"
     echo -e "|     7) <Allow>                                        |"
   else
@@ -182,13 +197,25 @@ function settings_ui() {
   echo -e "|                                                       |"
   hr
   echo -e "|                                                       |"
+  echo -e "| Mainsail:                                             |"
+  echo -e "|   ● release:                                          |"
+  if [[ ${mainsail_install_unstable} == "false" ]]; then
+    printf  "|     %-60s|\n" "${red}Disallow${white} unstable version"
+    echo -e "|     8) <Allow>                                        |"
+  else
+    printf  "|     %-60s|\n" "${green}Allow${white} unstable version"
+    echo -e "|     8) <Disallow>                                     |"
+  fi
+  echo -e "|                                                       |"
+  hr
+  echo -e "|                                                       |"
   echo -e "| Others:                                               |"
   if [[ ${backup_before_update} == "false" ]]; then
     printf  "|     %-60s|\n" "${red}No backup${white} before update"
-    echo -e "|     8) <Do backup>                                    |"
+    echo -e "|     9) <Do backup>                                    |"
   else
     printf  "|     %-60s|\n" "${green}Backup${white} before update"
-    echo -e "|     8) <No backup>                                    |"
+    echo -e "|     9) <No backup>                                    |"
   fi
   echo -e "|                                                       |"
   blank_line
@@ -238,6 +265,8 @@ function show_settings_help() {
 }
 
 function settings_menu() {
+  clear -x && sudo -v && clear -x # (re)cache sudo credentials so password prompt doesn't bork ui
+
   clear && print_header
   settings_ui
 
@@ -255,23 +284,27 @@ function settings_menu() {
         settings_ui;;
       3)
         clear && print_header
-	      toggle_pip_index_url_test
+	      set_github_base
         settings_ui;;
       4)
         clear && print_header
-	      set_pip_index_url
+	      toggle_pip_index_url_test
         settings_ui;;
       5)
         clear && print_header
-        change_klipper_repo_menu
+	      set_pip_index_url
         settings_ui;;
       6)
+        clear && print_header
+        change_klipper_repo_menu
+        settings_ui;;
+      7)
         switch_fluidd_releasetype
         settings_menu;;
-      7)
+      8)
         switch_mainsail_releasetype
         settings_menu;;
-      8)
+      9)
         toggle_backup_before_update
         settings_menu;;
       B|b)

@@ -63,9 +63,9 @@ function print_status() {
   local status component="${1}"
   status=$(get_"${component}"_status)
 
-  if [[ ${status} == "Not installed!" ]] || [[ ${status} == "Not running!" ]]; then
+  if [[ ${status} == "Not installed!" ]]; then
     status="${red}${status}${white}"
-  elif [[ ${status} == "Incomplete!" ]]; then
+  elif [[ ${status} == "Incomplete!" ]] || [[ ${status} == "Not running!" ]]; then
     status="${yellow}${status}${white}"
   elif [[ ${status} == "Not linked!" ]]; then
     ### "Not linked!" is only required for Moonraker-obico

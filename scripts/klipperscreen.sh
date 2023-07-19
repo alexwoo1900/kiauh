@@ -175,7 +175,12 @@ function get_klipperscreen_status() {
   done
 
   if (( filecount == ${#data_arr[*]} )); then
-    status="Installed!"
+    state=$(systemctl is-active KlipperScreen)
+    if [[ $state == "active" ]]; then
+      echo "Running!"
+    else
+      echo "Not running!"
+    fi
   elif (( filecount == 0 )); then
     status="Not installed!"
   else

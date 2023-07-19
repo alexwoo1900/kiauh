@@ -302,8 +302,8 @@ function create_klipper_virtualenv() {
   status_msg "Installing $("python${python_version}" -V) virtual environment..."
 
   if virtualenv -p "python${python_version}" "${KLIPPY_ENV}"; then
-    (( python_version == 3 )) && "${KLIPPY_ENV}"/bin/pip install -U pip ${PIP_INSTALL_OPTIONS}
-    "${KLIPPY_ENV}"/bin/pip install -r "${KLIPPER_DIR}"/scripts/klippy-requirements.txt ${PIP_INSTALL_OPTIONS}
+    (( python_version == 3 )) && "${KLIPPY_ENV}"/bin/pip install -U pip
+    "${KLIPPY_ENV}"/bin/pip install -r "${KLIPPER_DIR}"/scripts/klippy-requirements.txt
   else
     log_error "failure while creating python3 klippy-env"
     error_msg "Creation of Klipper virtualenv failed!"
@@ -576,10 +576,11 @@ function get_klipper_status() {
   done
 
   if (( filecount == ${#data_arr[*]} )); then
-    if (( py_ver == 3 )); then
-      status="Installed: ${sf_count}(py${py_ver})"
+    state=$(systemctl is-active klipper)
+    if [[ $state == "active" ]]; then
+      echo "Running!"
     else
-      status="Installed: ${sf_count}"
+      echo "Not running!"
     fi
   elif (( filecount == 0 )); then
     status="Not installed!"

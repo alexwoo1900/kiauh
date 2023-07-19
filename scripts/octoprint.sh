@@ -163,8 +163,8 @@ function install_octoprint() {
     if virtualenv --python=python3 venv; then
       ### activate virtualenv
       source venv/bin/activate
-      pip install pip --upgrade ${PIP_INSTALL_OPTIONS}
-      pip install --no-cache-dir octoprint ${PIP_INSTALL_OPTIONS}
+      pip install pip --upgrade
+      pip install --no-cache-dir octoprint
       ### leave virtualenv
       deactivate
     else
@@ -407,7 +407,12 @@ function get_octoprint_status() {
   if (( sf_count == 0 )) && (( env_count == 0 )) && (( dir_count == 0 )); then
     status="Not installed!"
   elif (( sf_count == env_count )) && (( sf_count == dir_count )); then
-    status="Installed: ${sf_count}"
+    state=$(systemctl is-active octoprint)
+    if [[ $state == "active" ]]; then
+      echo "Running!"
+    else
+      echo "Not running!"
+    fi
   else
     status="Incomplete!"
   fi

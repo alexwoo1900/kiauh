@@ -35,6 +35,7 @@ The format of the compressed package follows Github's project naming, which is p
 
 Project | Offline installation | Temporary source
 -|-|-
+Crowsnest | Yes | Yes
 Fluidd | Yes | Unnecessary
 Klipper | Yes | Yes
 KlipperScreen | Yes | Unnecessary

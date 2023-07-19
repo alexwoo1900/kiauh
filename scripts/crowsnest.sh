@@ -32,9 +32,33 @@ function multi_instance_message(){
   continue_config
 }
 
-# Helper funcs
-function clone_crowsnest(){
-  $(command -v git) clone "${CROWSNEST_REPO}" -b master "${CROWSNEST_DIR}"
+function get_crowsnest(){
+
+  ### 1-1 extract from local
+  status_msg "Unzipping moonraker from ${OFFLINE_DIR}"
+  local extracted_from_offline="false"
+  if [[ -d "${OFFLINE_DIR}" ]]; then
+     matched_repos=$(find "${OFFLINE_DIR}" -type f -name "crowsnest-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
+     if [[ -n "$matched_repos" ]]; then
+       local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
+       local repo_name=$(basename "${latest_matched_repo}" .zip)
+       unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
+       mv ${OFFLINE_DIR}/${repo_name} ${CROWSNEST_DIR}
+       extracted_from_offline="true"
+       ok_msg "Extracting complete!"
+     else
+       warn_msg "No offline package available, skip local step."
+     fi
+  else
+    warn_msg "Offline directory does not exist, skip local step."
+  fi
+
+  ### 1-2 clone from remote
+  if [[ ${extracted_from_offline} == "false" ]]; then
+    status_msg "Cloning 'crowsnest' repository ..."
+    $(command -v git) clone "${CROWSNEST_REPO}" -b master "${CROWSNEST_DIR}"
+    ok_msg "Cloning complete!"
+  fi
 }
 
 function check_multi_instance(){
@@ -87,10 +111,9 @@ function install_crowsnest(){
   # Step 1: jump to home directory
   pushd "${HOME}" &> /dev/null || exit 1
 
-  # Step 2: Clone crowsnest repo
-  status_msg "Cloning 'crowsnest' repository ..."
+  # Step 2: get crowsnest repo
   if [[ ! -d "${HOME}/crowsnest" && -z "$(ls -A "${HOME}/crowsnest" 2> /dev/null)" ]]; then
-    clone_crowsnest
+    get_crowsnest
   else
     ok_msg "crowsnest repository already exists ..."
   fi

@@ -166,8 +166,8 @@ function create_moonraker_virtualenv() {
   [[ -d ${MOONRAKER_ENV} ]] && rm -rf "${MOONRAKER_ENV}"
 
   if virtualenv -p /usr/bin/python3 "${MOONRAKER_ENV}"; then
-    "${MOONRAKER_ENV}"/bin/pip install -U pip ${PIP_INSTALL_OPTIONS}
-    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt" ${PIP_INSTALL_OPTIONS}
+    "${MOONRAKER_ENV}"/bin/pip install -U pip
+    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt"
   else
     log_error "failure while creating python3 moonraker-env"
     error_msg "Creation of Moonraker virtualenv failed!"
@@ -586,7 +586,7 @@ function update_moonraker() {
     ### read PKGLIST and install possible new dependencies
     install_moonraker_dependencies
     ### install possible new python dependencies
-    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt" ${PIP_INSTALL_OPTIONS}
+    "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt"
   fi
 
   ### required due to https://github.com/Arksine/moonraker/issues/349
@@ -615,7 +615,12 @@ function get_moonraker_status() {
   done
 
   if (( filecount == ${#data_arr[*]} )); then
-    status="Installed: ${sf_count}"
+    state=$(systemctl is-active moonraker)
+    if [[ $state == "active" ]]; then
+      echo "Running!"
+    else
+      echo "Not running!"
+    fi
   elif (( filecount == 0 )); then
     status="Not installed!"
   else
