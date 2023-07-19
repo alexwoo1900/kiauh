@@ -342,7 +342,12 @@ function get_octoeverywhere_status() {
   elif [[ ! -d "${OCTOEVERYWHERE_DIR}" ]]; then
     status="Incomplete!"
   else
-    status="Installed!"
+    local state=$(systemctl is-active octoeverywhere)
+    if [[ $state == "active" ]]; then
+      status="Running!"
+    else
+      status="Not running!"
+    fi
   fi
 
   echo "${status}"

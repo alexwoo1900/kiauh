@@ -161,7 +161,12 @@ function get_mobileraker_status() {
   done
 
   if (( filecount == ${#data_arr[*]} )); then
-    status="Installed!"
+    local state=$(systemctl is-active crowsnest)
+    if [[ $state == "active" ]]; then
+      status="Running!"
+    else
+      status="Not running!"
+    fi
   elif (( filecount == 0 )); then
     status="Not installed!"
   else

@@ -407,11 +407,11 @@ function get_octoprint_status() {
   if (( sf_count == 0 )) && (( env_count == 0 )) && (( dir_count == 0 )); then
     status="Not installed!"
   elif (( sf_count == env_count )) && (( sf_count == dir_count )); then
-    state=$(systemctl is-active octoprint)
+    local state=$(systemctl is-active octoprint)
     if [[ $state == "active" ]]; then
-      echo "Running!"
+      status="Running!"
     else
-      echo "Not running!"
+      status="Not running!"
     fi
   else
     status="Incomplete!"

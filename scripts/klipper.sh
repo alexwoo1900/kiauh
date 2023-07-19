@@ -576,11 +576,11 @@ function get_klipper_status() {
   done
 
   if (( filecount == ${#data_arr[*]} )); then
-    state=$(systemctl is-active klipper)
+    local state=$(systemctl is-active klipper)
     if [[ $state == "active" ]]; then
-      echo "Running!"
+      status="Running!"
     else
-      echo "Not running!"
+      status="Not running!"
     fi
   elif (( filecount == 0 )); then
     status="Not installed!"

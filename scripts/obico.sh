@@ -457,7 +457,12 @@ function get_moonraker_obico_status() {
   elif [[ ${is_linked} == "false" ]]; then
     status="Not linked!"
   else
-    status="Installed!"
+    local state=$(systemctl is-active moonraker-obico)
+    if [[ $state == "active" ]]; then
+      status="Running!"
+    else
+      status="Not running!"
+    fi
   fi
 
   echo "${status}"

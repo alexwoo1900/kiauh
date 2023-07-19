@@ -617,9 +617,9 @@ function get_moonraker_status() {
   if (( filecount == ${#data_arr[*]} )); then
     state=$(systemctl is-active moonraker)
     if [[ $state == "active" ]]; then
-      echo "Running!"
+      status="Running!"
     else
-      echo "Not running!"
+      status="Not running!"
     fi
   elif (( filecount == 0 )); then
     status="Not installed!"

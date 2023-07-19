@@ -481,11 +481,11 @@ function get_telegram_bot_status() {
   done
 
   if (( filecount == ${#data_arr[*]} )); then
-    state=$(systemctl is-active moonraker-telegram-bot)
+    local state=$(systemctl is-active moonraker-telegram-bot)
     if [[ $state == "active" ]]; then
-      echo "Running!"
+      status="Running!"
     else
-      echo "Not running!"
+      status="Not running!"
     fi
   elif (( filecount == 0 )); then
     status="Not installed!"
