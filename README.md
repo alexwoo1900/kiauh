@@ -33,7 +33,7 @@ The format of the compressed package follows Github's project naming, which is p
 `Project page` ->`Code` ->`Download ZIP`
 
 
-Project | Offline installation | Temporary source
+Project | Offline installation | Source change
 -|-|-
 Crowsnest | Yes | Yes
 Fluidd | Yes | Unnecessary
@@ -42,4 +42,6 @@ KlipperScreen | Yes | Unnecessary
 Mailsail | Yes | Unnecessary
 MJPG-Streamer | Yes | Unnecessary
 Moonraker | Yes | Yes
+Moonraker-Telegram-Bot | Yes | Yes
+Moonraker-Obico | Yes | Yes
 Octoprint | Unnecessary | Yes

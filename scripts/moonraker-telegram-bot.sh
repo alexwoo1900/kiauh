@@ -147,8 +147,33 @@ function telegram_bot_setup() {
   local dep=(git virtualenv)
   dependency_check "${dep[@]}"
 
-  ### step 1: clone telegram bot
-  clone_telegram_bot "${TELEGRAM_BOT_REPO}"
+  ### force remove existing Moonraker-Telegram-Bot dir
+  [[ -d ${repo} ]] && rm -rf "${TELEGRAM_BOT_DIR}"
+  
+  ### 1-1 extract from local
+  status_msg "Unzipping moonraker-telegram-bot from ${OFFLINE_DIR}"
+  local extracted_from_offline="false"
+  if [[ -d "${OFFLINE_DIR}" ]]; then
+     matched_repos=$(find "${OFFLINE_DIR}" -type f -name "moonraker-telegram-bot-*.zip" -printf "%T@ %p\n" | sort -k1nr | awk '{print $2}')
+     if [[ -n "$matched_repos" ]]; then
+       local latest_matched_repo=$(echo "$matched_repos" | head -n 1)
+       local repo_name=$(basename "${latest_matched_repo}" .zip)
+       unzip -q ${latest_matched_repo} -d "${OFFLINE_DIR}"
+       mv ${OFFLINE_DIR}/${repo_name} ${TELEGRAM_BOT_DIR}
+       extracted_from_offline="true"
+       ok_msg "Extracting complete!"
+     else
+       warn_msg "No offline package available, skip local step."
+     fi
+  else
+    warn_msg "Offline directory does not exist, skip local step."
+  fi
+
+  ### 1-2 clone from remote
+  if [[ ${extracted_from_offline} == "false" ]]; then
+    clone_telegram_bot "${TELEGRAM_BOT_REPO}"
+    ok_msg "Cloning complete!"
+  fi
 
   ### step 2: install telegram bot dependencies and create python virtualenv
   status_msg "Installing dependencies ..."
@@ -177,10 +202,8 @@ function telegram_bot_setup() {
 
 function clone_telegram_bot() {
   local repo=${1}
-
+  
   status_msg "Cloning Moonraker-Telegram-Bot from ${repo} ..."
-  ### force remove existing Moonraker-Telegram-Bot dir
-  [[ -d ${repo} ]] && rm -rf "${TELEGRAM_BOT_DIR}"
 
   cd "${HOME}" || exit 1
   if ! git clone "${repo}" "${TELEGRAM_BOT_DIR}"; then
@@ -458,7 +481,12 @@ function get_telegram_bot_status() {
   done
 
   if (( filecount == ${#data_arr[*]} )); then
-    status="Installed: ${sf_count}"
+    state=$(systemctl is-active moonraker-telegram-bot)
+    if [[ $state == "active" ]]; then
+      echo "Running!"
+    else
+      echo "Not running!"
+    fi
   elif (( filecount == 0 )); then
     status="Not installed!"
   else

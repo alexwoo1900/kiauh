@@ -80,6 +80,7 @@ function set_pip_index_url() {
 
     if [[ $url =~ ^(http|https)://.*$ ]]; then
       sudo pip config --global set global.index-url $url
+      $(sudo pip config --global unset global.extra-index-url > /dev/null 2>&1) || true
       break
     else
       echo "Illegal pip index url!"
