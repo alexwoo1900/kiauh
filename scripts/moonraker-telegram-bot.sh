@@ -4,7 +4,7 @@
 # Copyright (C) 2020 - 2023 Dominik Willner <th33xitus@gmail.com>       #
 #                                                                       #
 # This file is part of KIAUH - Klipper Installation And Update Helper   #
-# https://github.com/th33xitus/kiauh                                    #
+# https://github.com/dw-0/kiauh                                         #
 #                                                                       #
 # This file may be distributed under the terms of the GNU GPLv3 license #
 #=======================================================================#
@@ -33,7 +33,7 @@ function telegram_bot_setup_dialog() {
 
   status_msg "Initializing Telegram Bot installation ..."
   ### first, we create a backup of the full klipper_config dir - safety first!
-  backup_klipper_config_dir
+  backup_config_dir
 
   local moonraker_count user_input=() moonraker_names=()
   moonraker_count=$(echo "${moonraker_services}" | wc -w )

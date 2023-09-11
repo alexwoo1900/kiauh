@@ -4,7 +4,7 @@
 # Copyright (C) 2020 - 2023 Dominik Willner <th33xitus@gmail.com>       #
 #                                                                       #
 # This file is part of KIAUH - Klipper Installation And Update Helper   #
-# https://github.com/th33xitus/kiauh                                    #
+# https://github.com/dw-0/kiauh                                         #
 #                                                                       #
 # This file may be distributed under the terms of the GNU GPLv3 license #
 #=======================================================================#
@@ -139,8 +139,14 @@ function update_all() {
     read -p "${cyan}###### Do you want to proceed? (Y/n):${white} " yn
     case "${yn}" in
       Y|y|Yes|yes|"")
-        for app in "${update_arr[@]}"; do
-          local update="update_${app}"
+        local component
+        local update
+        for component in "${update_arr[@]}"; do
+          if [[ ${component} == "system" ]]; then
+            update="upgrade_system_packages"
+          else
+            update="update_${component}"
+          fi
           #shellcheck disable=SC2250
           $update
         done

@@ -4,7 +4,7 @@
 # Copyright (C) 2020 - 2023 Dominik Willner <th33xitus@gmail.com>       #
 #                                                                       #
 # This file is part of KIAUH - Klipper Installation And Update Helper   #
-# https://github.com/th33xitus/kiauh                                    #
+# https://github.com/dw-0/kiauh                                         #
 #                                                                       #
 # This file may be distributed under the terms of the GNU GPLv3 license #
 #=======================================================================#
@@ -25,29 +25,34 @@ function check_for_backup_dir() {
 }
 
 function backup_before_update() {
-  echo ""
-  ### todo backup functions need to be updated for new folder structure
-#  read_kiauh_ini "${FUNCNAME[0]}"
-#  local state="${backup_before_update}"
-#  [[ ${state} = "false" ]] && return
-#  backup_"${1}"
+  read_kiauh_ini "${FUNCNAME[0]}"
+  local state="${backup_before_update}"
+  [[ ${state} = "false" ]] && return
+  backup_"${1}"
 }
 
-function backup_klipper_config_dir() {
+function backup_config_dir() {
   check_for_backup_dir
-  local current_date config_folder_name
+  local current_date config_pathes
 
-  if [[ -d "${KLIPPER_CONFIG}" ]]; then
+  config_pathes=$(get_config_folders)
+
+  if [[ -n "${config_pathes}" ]]; then
     current_date=$(get_date)
-    config_folder_name="$(echo "${KLIPPER_CONFIG}" | rev | cut -d"/" -f1 | rev)"
-
     status_msg "Timestamp: ${current_date}"
-    status_msg "Create backup of the Klipper config directory ..."
 
-    mkdir -p "${BACKUP_DIR}/${config_folder_name}/${current_date}"
-    cp -r "${KLIPPER_CONFIG}" "${_}"
+    local i=0 folder folder_name target_dir
+    for folder in ${config_pathes}; do
+      status_msg "Create backup of ${folder} ..."
 
-    print_confirm "Configuration directory backup complete!"
+      folder_name=$(echo "${folder}" | rev | cut -d"/" -f2 | rev)
+      target_dir="${BACKUP_DIR}/configs/${current_date}/${folder_name}"
+      mkdir -p "${target_dir}"
+      cp -r "${folder}" "${target_dir}"
+      i=$(( i + 1 ))
+
+      ok_msg "Backup created in:\n${target_dir}"
+    done
   else
     ok_msg "No config directory found! Skipping backup ..."
   fi
@@ -55,27 +60,29 @@ function backup_klipper_config_dir() {
 
 function backup_moonraker_database() {
   check_for_backup_dir
-  local current_date databases target_dir regex=".moonraker_database(_[0-9a-zA-Z]+)?"
-  databases=$(find "${HOME}" -maxdepth 1 -type d -regextype posix-extended -regex "${HOME}/${regex}" | sort)
+  local current_date db_pathes
 
-  if [[ -n ${databases} ]]; then
+  db_pathes=$(get_instance_folder_path "database")
+
+  if [[ -n ${db_pathes} ]]; then
     current_date=$(get_date)
-    target_dir="${BACKUP_DIR}/moonraker_database_backup/${current_date}"
-
     status_msg "Timestamp: ${current_date}"
-    mkdir -p "${target_dir}"
 
-    for database in ${databases}; do
+    local i=0 database folder_name target_dir
+    for database in ${db_pathes}; do
       status_msg "Create backup of ${database} ..."
-      cp -r "${database}" "${target_dir}"
-      ok_msg "Done!"
-    done
 
-    print_confirm "Moonraker database backup complete!"
+      folder_name=$(echo "${database}" | rev | cut -d"/" -f2 | rev)
+      target_dir="${BACKUP_DIR}/moonraker_databases/${current_date}/${folder_name}"
+      mkdir -p "${target_dir}"
+      cp -r "${database}" "${target_dir}"
+      i=$(( i + 1 ))
+
+      ok_msg "Backup created in:\n${target_dir}"
+    done
   else
     print_error "No Moonraker database found! Skipping backup ..."
   fi
-  return
 }
 
 function backup_klipper() {
@@ -186,5 +193,21 @@ function backup_telegram_bot() {
     print_confirm "MoonrakerTelegramBot backup complete!"
   else
     print_error "Can't back up MoonrakerTelegramBot directory!\n Not found!"
+  fi
+}
+
+function backup_octoeverywhere() {
+  local current_date
+
+  if [[ -d ${OCTOEVERYWHERE_DIR} ]] ; then
+    status_msg "Creating OctoEverywhere backup ..."
+    check_for_backup_dir
+    current_date=$(get_date)
+    status_msg "Timestamp: ${current_date}"
+    mkdir -p "${BACKUP_DIR}/OctoEverywhere-backups/${current_date}"
+    cp -r "${OCTOEVERYWHERE_DIR}" "${_}" && cp -r "${OCTOEVERYWHERE_ENV}" "${_}"
+    print_confirm "OctoEverywhere backup complete!"
+  else
+    print_error "Can't back up OctoEverywhere directory!\n Not found!"
   fi
 }

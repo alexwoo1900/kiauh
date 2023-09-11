@@ -4,7 +4,7 @@
 # Copyright (C) 2020 - 2023 Dominik Willner <th33xitus@gmail.com>       #
 #                                                                       #
 # This file is part of KIAUH - Klipper Installation And Update Helper   #
-# https://github.com/th33xitus/kiauh                                    #
+# https://github.com/dw-0/kiauh                                         #
 #                                                                       #
 # This file may be distributed under the terms of the GNU GPLv3 license #
 #=======================================================================#
@@ -140,18 +140,22 @@ function install_crowsnest(){
 
 # Remove func
 function remove_crowsnest(){
-  pushd "${HOME}/crowsnest" &> /dev/null || exit 1
-  title_msg "Uninstaller will prompt you for sudo password!"
-  status_msg "Launching crowsnest uninstaller ..."
-  if ! make uninstall; then
-    error_msg "Something went wrong! Please try again..."
-    exit 1
-  fi
-  if [[ -e "${CROWSNEST_DIR}" ]]; then
+  if [[ -d "${CROWSNEST_DIR}" ]]; then
+    pushd "${HOME}/crowsnest" &> /dev/null || exit 1
+    title_msg "Uninstaller will prompt you for sudo password!"
+    status_msg "Launching crowsnest uninstaller ..."
+
+    if ! make uninstall; then
+      error_msg "Something went wrong! Please try again..."
+      exit 1
+    fi
+
     status_msg "Removing crowsnest directory ..."
     rm -rf "${CROWSNEST_DIR}"
     ok_msg "Directory removed!"
   fi
+
+  print_confirm "Crowsnest successfully removed!"
 }
 
 # Status funcs
